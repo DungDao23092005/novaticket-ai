@@ -30,13 +30,23 @@ async def lifespan(app: FastAPI):
     - Startup: runs before the app starts accepting requests
     - Shutdown: runs after the app stops accepting requests
 
-    Currently: just logs startup/shutdown.
-    Will be expanded in Sprint 1 (DB) and Sprint 5 (ML models).
+    Currently: verifies DB connection on startup.
+    Will be expanded in Sprint 5 (ML model loading).
     """
     # --- STARTUP ---
     print(f"[NovaTicket] Starting {settings.app_name} v{settings.app_version}")
     print(f"[NovaTicket] Environment: {settings.environment}")
     print(f"[NovaTicket] Debug mode: {settings.debug}")
+
+    # Verify database connection at startup (fail fast if DB is unreachable)
+    try:
+        from app.database.connection import check_database_connection
+        check_database_connection()
+        print("[NovaTicket] Database connection: OK")
+    except Exception as exc:
+        # Log the error but don't crash the app — DB may not be needed for all routes
+        # In production, you would raise here to prevent serving with broken DB
+        print(f"[NovaTicket] WARNING: Database connection failed: {exc}")
 
     yield  # Application runs here
 

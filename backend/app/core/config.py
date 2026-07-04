@@ -25,6 +25,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",  # Ignore extra env vars not defined here
+        protected_namespaces=("settings_",),  # Fix: suppress false positive warning for model_dir field
     )
 
     # ------------------------------------------------------------------
