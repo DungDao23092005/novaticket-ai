@@ -1,0 +1,39 @@
+# ==============================================================
+# NovaTicket — Docker Compose
+# Sprint 0: SQL Server only (for local development)
+# Backend and Frontend are run locally, not in Docker yet.
+# Full Docker setup (including backend/frontend) → Sprint 9
+# ==============================================================
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: novaticket_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_PASSWORD}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/opt/mssql-tools18/bin/sqlcmd",
+          "-S", "localhost",
+          "-U", "sa",
+          "-P", "${MSSQL_PASSWORD}",
+          "-Q", "SELECT 1",
+          "-No"
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local
