@@ -1,0 +1,2 @@
+# This directory stores seed CSV data used to populate the database.
+# Large raw datasets should NOT be committed — see root .gitignore.

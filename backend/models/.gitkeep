@@ -1,0 +1,3 @@
+# This directory stores trained ML model artifacts (.joblib files).
+# Artifact files are gitignored (see root .gitignore).
+# Only this .gitkeep file is tracked to preserve the directory in Git.
