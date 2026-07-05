@@ -1,1 +1,1 @@
-# training package — offline ML training pipelines only
+# training package
