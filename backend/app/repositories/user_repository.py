@@ -49,22 +49,16 @@ class UserRepository:
         )
 
     def exists_by_email(self, email: str) -> bool:
-        """Check if a user with the given email already exists."""
-        return (
-            self.db.query(User.id)
-            .filter(User.email == email.lower())
-            .first()
-            is not None
-        )
+        """Check if a user with the given email already exists.
+        Uses TOP 1 SELECT — SQL Server compatible (avoids EXISTS subquery syntax).
+        """
+        return self.db.query(User).filter(User.email == email.lower()).first() is not None
 
     def exists_by_username(self, username: str) -> bool:
-        """Check if a user with the given username already exists."""
-        return (
-            self.db.query(User.id)
-            .filter(User.username == username)
-            .first()
-            is not None
-        )
+        """Check if a user with the given username already exists.
+        Uses TOP 1 SELECT — SQL Server compatible.
+        """
+        return self.db.query(User).filter(User.username == username).first() is not None
 
     # ------------------------------------------------------------------
     # Write

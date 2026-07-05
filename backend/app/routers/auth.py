@@ -1,17 +1,15 @@
 """
 routers/auth.py — Authentication endpoints.
 
-Endpoints:
-    POST /auth/register     — Register new user account (JSON body)
-    POST /auth/login        — Login and receive JWT (JSON body)
-    POST /auth/login/form   — Login via OAuth2 form (for Swagger UI)
-    GET  /auth/me           — Get current authenticated user profile
+Pattern: Thin router — delegates all business logic to AuthService.
+    Router = parse request + call service + return response
+    Service = business logic (uniqueness check, password verify, JWT)
 
-Design notes:
-    - register: check email/username uniqueness before insert
-    - login: load user by email → verify password → issue JWT
-    - Two login endpoints: JSON (for frontend) + form (for Swagger UI)
-    - /auth/me: protected route to verify auth is working
+Endpoints:
+    POST /auth/register     — Register new user account
+    POST /auth/login        — Login with JSON body → JWT
+    POST /auth/login/form   — Login via OAuth2 form (Swagger UI)
+    GET  /auth/me           — Get current authenticated user profile
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -19,10 +17,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_active_user
-from app.core.security import create_access_token, hash_password, verify_password
 from app.database.connection import get_db
 from app.models.user import User
 from app.schemas.user import Token, UserLogin, UserRegister, UserResponse
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -50,33 +48,8 @@ def register(
 
     Returns the created user profile (without password).
     """
-    # Check email uniqueness
-    if db.query(User).filter(User.email == body.email).first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
-        )
-
-    # Check username uniqueness
-    if db.query(User).filter(User.username == body.username).first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already taken",
-        )
-
-    # Create user
-    user = User(
-        email=body.email,
-        username=body.username,
-        hashed_password=hash_password(body.password),
-        full_name=body.full_name,
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    return user
+    service = AuthService(db)
+    return service.register(body)
 
 
 # ----------------------------------------------------------------------
@@ -94,33 +67,13 @@ def login(
     """
     Authenticate with email and password.
 
-    Returns a JWT access token to use in subsequent requests:
+    Returns a JWT access token:
     ```
     Authorization: Bearer <access_token>
     ```
     """
-    # Load user by email
-    user = db.query(User).filter(User.email == body.email).first()
-
-    # Verify password (same error for wrong email or wrong password — prevent enumeration)
-    if not user or not verify_password(body.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Check account is active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive",
-        )
-
-    # Issue JWT
-    access_token = create_access_token(data={"sub": str(user.id)})
-
-    return Token(access_token=access_token, token_type="bearer")
+    service = AuthService(db)
+    return service.login(email=body.email, password=body.password)
 
 
 # ----------------------------------------------------------------------
@@ -137,32 +90,15 @@ def login_form(
     db: Session = Depends(get_db),
 ) -> Token:
     """
-    OAuth2 password flow endpoint.
-    Used by Swagger UI's "Authorize" button.
-    Username field should contain the user's **email**.
+    OAuth2 password flow endpoint for Swagger UI.
+    The **username** field should contain the user's **email**.
     """
-    # OAuth2 form uses "username" field — we treat it as email
-    user = db.query(User).filter(User.email == form_data.username).first()
-
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive",
-        )
-
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return Token(access_token=access_token, token_type="bearer")
+    service = AuthService(db)
+    return service.login(email=form_data.username, password=form_data.password)
 
 
 # ----------------------------------------------------------------------
-# GET /auth/me — Protected route: verify auth is working
+# GET /auth/me
 # ----------------------------------------------------------------------
 @router.get(
     "/me",
