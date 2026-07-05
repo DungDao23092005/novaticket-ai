@@ -17,7 +17,7 @@ from app.database.connection import get_db
 from app.models.user import User
 from app.repositories.event_repository import EventRepository
 from app.repositories.review_repository import ReviewRepository
-from app.schemas.review import ReviewCreate, ReviewResponse
+from app.schemas.review import ReviewCreate, ReviewResponse, SentimentSummary
 from app.services.review_service import ReviewService
 
 router = APIRouter(tags=["Reviews"])
@@ -102,3 +102,59 @@ def get_event_reviews(
     review_repo = ReviewRepository(db)
     return review_repo.get_by_event(event_id)
 
+
+# ----------------------------------------------------------------------
+# GET /events/{event_id}/sentiment-summary
+# ----------------------------------------------------------------------
+@router.get(
+    "/events/{event_id}/sentiment-summary",
+    response_model=SentimentSummary,
+    summary="Get sentiment summary for an event",
+)
+def get_sentiment_summary(
+    event_id: int,
+    db: Session = Depends(get_db),
+) -> SentimentSummary:
+    """
+    Returns aggregated sentiment statistics for all reviews of an event.
+
+    **Fields:**
+    - `total_reviews`: Total number of reviews
+    - `positive_count` / `neutral_count` / `negative_count`: Review counts by sentiment
+    - `positive_pct` / `neutral_pct` / `negative_pct`: Percentage breakdown
+    - `average_rating`: Mean star rating (1.0–5.0)
+
+    Public endpoint — no authentication required.
+    Returns zeroed stats if event has no reviews (not 404).
+    """
+    event_repo = EventRepository(db)
+    event = event_repo.get_by_id(event_id)
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event with id={event_id} not found",
+        )
+
+    review_repo = ReviewRepository(db)
+    summary = review_repo.get_sentiment_summary(event_id)
+
+    total = summary["total"]
+    positive = summary["positive"]
+    neutral = summary["neutral"]
+    negative = summary["negative"]
+
+    # Compute percentages safely
+    def pct(count: int) -> float:
+        return round(count / total * 100, 1) if total > 0 else 0.0
+
+    return SentimentSummary(
+        event_id=event_id,
+        total_reviews=total,
+        positive_count=positive,
+        neutral_count=neutral,
+        negative_count=negative,
+        positive_pct=pct(positive),
+        neutral_pct=pct(neutral),
+        negative_pct=pct(negative),
+        average_rating=summary["avg_rating"],
+    )
