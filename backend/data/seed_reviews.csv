@@ -1,0 +1,75 @@
+content,rating,sentiment_label
+"Absolutely fantastic event! The energy was electric and every moment was unforgettable. Will definitely attend again next year!",5,positive
+"Outstanding organization and world-class performers. This exceeded all my expectations by far.",5,positive
+"Best event I have attended this year. The venue was perfect and the atmosphere was incredible.",5,positive
+"Truly amazing experience from start to finish. Every detail was carefully planned and executed.",5,positive
+"Loved every second of it! Great lineup, excellent sound quality, friendly staff. Highly recommend.",5,positive
+"Phenomenal event! The performances were top-notch and the crowd was so enthusiastic.",5,positive
+"Exceeded all expectations. Professional setup, brilliant speakers, and very engaging content.",5,positive
+"What a wonderful day! Everything went smoothly and the event was filled with joy and excitement.",5,positive
+"Incredible experience. The workshops were insightful and I learned so much from the speakers.",5,positive
+"Top quality event with amazing attention to detail. Will recommend to all my friends.",4,positive
+"Really enjoyed the event. The sessions were very informative and the networking opportunities were great.",4,positive
+"Great event overall. Nice venue, good food, and interesting presentations throughout the day.",4,positive
+"Very well organized with excellent content. Some minor delays but overall a fantastic experience.",4,positive
+"Loved the variety of activities and performances. The event staff were helpful and professional.",4,positive
+"Highly enjoyable event! The speakers were knowledgeable and the discussions were very engaging.",4,positive
+"Brilliant event with lots of energy. The food stalls were excellent and the music was superb.",4,positive
+"Great value for money. The event delivered everything promised and then some. Really happy I went.",4,positive
+"Wonderful event with a very welcoming community. Made new friends and learned a lot.",4,positive
+"Excellent event! The production quality was high and the performances kept the crowd entertained.",4,positive
+"Very positive experience. Well-paced schedule, diverse content, and great crowd management.",4,positive
+"Fun and educational event. Glad I attended, definitely coming back for future editions.",4,positive
+"The event had some amazing highlights. Not perfect but definitely worth attending.",4,positive
+"Good event with energetic performances. A few things could be better but mostly enjoyed it.",4,positive
+"Really good experience. The location was convenient and the content was relevant and interesting.",4,positive
+"Very enjoyable day. The event lived up to its reputation and delivered quality entertainment.",4,positive
+"The event was okay. Nothing spectacular but it served its purpose.",3,neutral
+"Average experience. Some parts were interesting but others felt rushed and unpolished.",3,neutral
+"Decent event. Met expectations but did not really go beyond them in any significant way.",3,neutral
+"It was fine. The venue was nice but the content could have been more engaging and interactive.",3,neutral
+"Not bad but not great either. The event had potential but fell a bit short of expectations.",3,neutral
+"Mixed experience. Some sessions were excellent while others were disappointing and poorly planned.",3,neutral
+"The event was acceptable. Some good moments but also some boring parts that dragged on.",3,neutral
+"Mediocre experience overall. The organization was decent but the content lacked depth.",3,neutral
+"Fairly standard event. Nothing that stood out but also nothing that was truly terrible.",3,neutral
+"It was what I expected. Neither impressive nor disappointing. Just an average event.",3,neutral
+"Some good parts and some not so good parts. Overall a balanced experience nothing more.",3,neutral
+"The event had its moments. Some excellent sessions mixed with some that were not so great.",3,neutral
+"Okay experience. Could have been better with more variety and better time management.",3,neutral
+"Not the best event I have attended but also not the worst. Somewhere in the middle.",3,neutral
+"The event was satisfactory. Met the basic requirements but lacked the wow factor.",3,neutral
+"Average event. The performances were decent but I was hoping for something more exciting.",3,neutral
+"It was alright. Enjoyed some parts but felt the event could have been better organized.",3,neutral
+"Standard event. Nothing memorable but it was fine for what it was supposed to be.",3,neutral
+"The experience was so-so. Some things worked well but others needed significant improvement.",3,neutral
+"Okay but could be improved. The event felt incomplete in some areas that mattered.",3,neutral
+"The event was disappointing. Poor organization and long queues ruined the experience.",2,negative
+"Not worth the ticket price. The performances were mediocre and the venue was overcrowded.",2,negative
+"Very underwhelming. Expected much more based on the advertisement and reviews I read.",2,negative
+"Poorly organized event. Long waiting times, unclear schedules, and unhelpful staff.",2,negative
+"Not a good experience. The sound quality was terrible and visibility was very poor.",2,negative
+"Disappointing turnout and lackluster performances. Would not recommend to anyone.",2,negative
+"The event did not live up to the hype at all. Very average at best and boring at worst.",2,negative
+"Wasted my money and time. The event was nothing like what was advertised and promised.",2,negative
+"Bad experience from start to finish. Everything went wrong and nobody seemed to care.",1,negative
+"Terrible event. The worst I have attended in years. Complete waste of time and money.",1,negative
+"Awful experience. Terrible sound, overcrowded venue, and rude staff who were unhelpful.",1,negative
+"Complete disaster. Nothing worked as planned and the organizers seemed totally unprepared.",1,negative
+"Extremely disappointed. The event was poorly managed and the quality was very low.",2,negative
+"Not good at all. The speakers were boring, the venue was too small, and food was bad.",2,negative
+"Very bad experience. I left early because nothing was enjoyable or worth staying for.",1,negative
+"Shameful event management. No clear schedule, constant delays, and zero communication.",1,negative
+"Never going back. The event was overpriced, overcrowded, and extremely poorly organized.",1,negative
+"Dreadful experience. I cannot believe how badly this event was planned and executed.",1,negative
+"Huge disappointment. The lineup was not what was promised and the production was terrible.",2,negative
+"Not recommended at all. The event had serious problems with logistics and quality.",2,negative
+"Boring and tedious event. Sat through hours of uninspiring content with no energy.",2,negative
+"The event was a mess. No proper facilities, poor communication, and bad overall experience.",2,negative
+"Absolutely not worth it. Every aspect of this event was below the standard expected.",1,negative
+"Very frustrating experience. Long queues, bad food, and performances that were not engaging.",2,negative
+"Regret attending this event. It was nothing like described and the value was terrible.",2,negative
+"The worst event I have attended. No highlights whatsoever. Complete waste of everyone's time.",1,negative
+"Stay away from this event. It was chaotic, unenjoyable, and a total disappointment.",1,negative
+"Terrible. The organizers clearly had no idea what they were doing. Very unprofessional.",1,negative
+"Not worth it at all. Poor quality across the board. I am very disappointed and upset.",2,negative

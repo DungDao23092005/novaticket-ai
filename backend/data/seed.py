@@ -10,12 +10,13 @@ Usage (from backend/ directory, with venv activated):
 What this seeds:
     1. Categories (from seed_categories.csv)
     2. Events (from seed_events.csv)
+    3. Reviews (from seed_reviews.csv) — with sentiment labels for ML training
 
 Design:
     - Check-before-insert pattern to ensure idempotency
-    - Categories are seeded first (events have FK to categories)
+    - Categories seeded first (events have FK to categories)
     - Events reference categories by name (resolved to FK at insert time)
-    - Dates parsed from ISO format strings
+    - Reviews distributed across all events; seed users auto-created if absent
     - Tags stored as comma-separated string (ML pipeline will parse them)
 """
 
@@ -34,6 +35,9 @@ sys.path.insert(0, str(backend_dir))
 from app.database.connection import SessionLocal
 from app.models.category import Category
 from app.models.event import Event
+from app.models.user import User
+from app.models.review import Review
+from app.core.security import hash_password
 
 
 # ----------------------------------------------------------------------
@@ -42,6 +46,14 @@ from app.models.event import Event
 DATA_DIR = Path(__file__).parent
 CATEGORIES_CSV = DATA_DIR / "seed_categories.csv"
 EVENTS_CSV = DATA_DIR / "seed_events.csv"
+REVIEWS_CSV = DATA_DIR / "seed_reviews.csv"
+
+# Seed user credentials — created automatically if not present
+SEED_USERS = [
+    {"email": "seed_user1@novaticket.dev", "username": "seed_user1", "password": "SeedPass123!", "full_name": "Seed User 1"},
+    {"email": "seed_user2@novaticket.dev", "username": "seed_user2", "password": "SeedPass123!", "full_name": "Seed User 2"},
+    {"email": "seed_user3@novaticket.dev", "username": "seed_user3", "password": "SeedPass123!", "full_name": "Seed User 3"},
+]
 
 
 # ----------------------------------------------------------------------
@@ -158,6 +170,125 @@ def seed_events(db, category_map: dict[str, int]) -> None:
     print(f"  → Inserted: {inserted}, Skipped (already exists): {skipped}")
 
 
+def seed_users(db) -> list[int]:
+    """
+    Create seed users for review seeding.
+    Returns list of user IDs.
+    """
+    print("\n[3/4] Seeding users (for review data)...")
+    user_ids = []
+    inserted = 0
+    skipped = 0
+
+    for u in SEED_USERS:
+        existing = db.query(User).filter_by(email=u["email"]).first()
+        if existing:
+            user_ids.append(existing.id)
+            skipped += 1
+            continue
+        user = User(
+            email=u["email"],
+            username=u["username"],
+            hashed_password=hash_password(u["password"]),
+            full_name=u["full_name"],
+            is_active=True,
+        )
+        db.add(user)
+        db.flush()
+        user_ids.append(user.id)
+        inserted += 1
+        print(f"  + User: {u['username']}")
+
+    db.commit()
+    print(f"  → Inserted: {inserted}, Skipped: {skipped}")
+    return user_ids
+
+
+def seed_reviews(db, user_ids: list[int]) -> None:
+    """
+    Insert reviews from seed_reviews.csv.
+    Reviews are distributed round-robin across all events and seed users.
+    Skips if review content already exists in DB (idempotent).
+    """
+    print("\n[4/4] Seeding reviews...")
+
+    if not REVIEWS_CSV.exists():
+        print(f"  ! REVIEWS_CSV not found: {REVIEWS_CSV}. Skipping.")
+        return
+
+    with open(REVIEWS_CSV, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+    # Get all active event IDs from DB
+    event_ids = [e.id for e in db.query(Event.id).filter(Event.is_active == True).all()]
+    if not event_ids:
+        print("  ! No events in DB. Skipping reviews.")
+        return
+
+    # Pre-load existing (user_id, event_id) pairs from DB into a set
+    # DB queries can't see uncommitted session objects, so we track with a Python set
+    existing_pairs: set[tuple[int, int]] = {
+        (r.user_id, r.event_id)
+        for r in db.query(Review.user_id, Review.event_id).all()
+    }
+    existing_contents: set[str] = {
+        r.content for r in db.query(Review.content).all()
+    }
+
+    inserted = 0
+    skipped = 0
+
+    for i, row in enumerate(rows):
+        content = row["content"].strip().strip('"')
+        rating = int(row["rating"].strip())
+        sentiment_label = row["sentiment_label"].strip()
+
+        # Skip if content already in DB (idempotent)
+        if content in existing_contents:
+            skipped += 1
+            continue
+
+        # Find a valid (user, event) pair not already used
+        # Cycle through events and users to find an unused pair
+        user_id = None
+        event_id = None
+
+        for e_offset in range(len(event_ids)):
+            candidate_event = event_ids[(i + e_offset) % len(event_ids)]
+            for u_offset in range(len(user_ids)):
+                candidate_user = user_ids[(i + u_offset) % len(user_ids)]
+                if (candidate_user, candidate_event) not in existing_pairs:
+                    user_id = candidate_user
+                    event_id = candidate_event
+                    break
+            if user_id is not None:
+                break
+
+        if user_id is None:
+            # All (user, event) combinations exhausted — skip
+            skipped += 1
+            continue
+
+        # Track assignment in-memory immediately (before commit)
+        existing_pairs.add((user_id, event_id))
+        existing_contents.add(content)
+
+        review = Review(
+            user_id=user_id,
+            event_id=event_id,
+            rating=rating,
+            content=content,
+            sentiment_label=sentiment_label,
+            sentiment_confidence=None,
+        )
+        db.add(review)
+        inserted += 1
+
+    db.commit()
+    print(f"  → Inserted: {inserted}, Skipped: {skipped}")
+
+
 # ----------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------
@@ -167,25 +298,27 @@ def main() -> None:
     print("=" * 60)
 
     # Verify CSV files exist
-    if not CATEGORIES_CSV.exists():
-        print(f"ERROR: {CATEGORIES_CSV} not found")
-        sys.exit(1)
-    if not EVENTS_CSV.exists():
-        print(f"ERROR: {EVENTS_CSV} not found")
-        sys.exit(1)
+    for csv_path, name in [(CATEGORIES_CSV, "categories"), (EVENTS_CSV, "events")]:
+        if not csv_path.exists():
+            print(f"ERROR: {csv_path} not found")
+            sys.exit(1)
 
     db = SessionLocal()
     try:
         category_map = seed_categories(db)
         seed_events(db, category_map)
+        user_ids = seed_users(db)
+        seed_reviews(db, user_ids)
 
         # Summary
         total_categories = db.query(Category).count()
         total_events = db.query(Event).count()
+        total_reviews = db.query(Review).count()
         print(f"\n{'=' * 60}")
         print(f"Seed complete!")
         print(f"  Total categories in DB: {total_categories}")
         print(f"  Total events in DB:     {total_events}")
+        print(f"  Total reviews in DB:    {total_reviews}")
         print(f"{'=' * 60}")
 
     except Exception as e:
