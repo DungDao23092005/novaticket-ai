@@ -9,6 +9,7 @@ Usage:
     print(settings.app_name)
 """
 
+from urllib.parse import quote_plus
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
@@ -71,10 +72,15 @@ class Settings(BaseSettings):
         """
         Build SQLAlchemy connection string for SQL Server via pyodbc.
         TrustServerCertificate=yes is required for local dev with self-signed cert.
+
+        IMPORTANT: Password is URL-encoded with quote_plus() to handle special
+        characters like @, #, !, ? which would otherwise break URL parsing.
+        Example: 'NovaTicket@2024!' → 'NovaTicket%402024%21'
         """
         driver_encoded = self.mssql_driver.replace(" ", "+")
+        password_encoded = quote_plus(self.mssql_password)  # Encode @, #, !, etc.
         return (
-            f"mssql+pyodbc://{self.mssql_user}:{self.mssql_password}"
+            f"mssql+pyodbc://{self.mssql_user}:{password_encoded}"
             f"@{self.mssql_server}:{self.mssql_port}/{self.mssql_database}"
             f"?driver={driver_encoded}"
             f"&TrustServerCertificate=yes"
