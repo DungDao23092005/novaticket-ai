@@ -90,16 +90,19 @@ app.add_middleware(
 # Routers
 # Added incrementally as each sprint builds the feature
 # ----------------------------------------------------------------------
-from app.routers import auth        # Sprint 2
-from app.routers import categories  # Sprint 3 - P1
-from app.routers import events      # Sprint 3 - P3
+from app.routers import auth          # Sprint 2
+from app.routers import categories    # Sprint 3 - P1
+from app.routers import events        # Sprint 3 - P3
+from app.routers import interactions  # Sprint 4 - P1
 
 app.include_router(auth.router)
 app.include_router(categories.router)
 app.include_router(events.router)
+app.include_router(interactions.router)
 
-# Sprint 4:
-# from app.routers import interactions, reviews
+# Sprint 4 - P3:
+# from app.routers import reviews
+# app.include_router(reviews.router)
 #
 # Sprint 6:
 # from app.routers import recommendations
