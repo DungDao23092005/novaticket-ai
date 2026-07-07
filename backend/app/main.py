@@ -103,8 +103,8 @@ app.include_router(interactions.router)
 app.include_router(reviews.router)
 
 # Sprint 6:
-# from app.routers import recommendations
-# app.include_router(recommendations.router)
+from app.routers import recommendations
+app.include_router(recommendations.router)
 
 
 # ----------------------------------------------------------------------
