@@ -11,13 +11,11 @@ What this does:
     4. Saves the vectorizer and the transformed TF-IDF matrix as artifacts.
 
 Output artifacts:
-    models/tfidf_content.joblib   — Fitted TF-IDF vectorizer
-    models/event_matrix.joblib    — Dictionary containing:
-                                      - "event_ids": numpy array of event IDs matching matrix rows
-                                      - "tfidf_matrix": sparse TF-IDF matrix of all events
-
-These artifacts are loaded at startup by the inference service to provide
-content-based recommendations in real-time.
+    models/tfidf_content.joblib   — Fitted TF-IDF vectorizer (Content-Based)
+    models/event_matrix.joblib    — TF-IDF event matrix (Content-Based)
+    models/cf_matrix.joblib       — Item-Item Collaborative Filtering matrix
+    
+These artifacts are loaded at startup by the inference service.
 """
 
 import sys
@@ -44,6 +42,7 @@ MODELS_DIR.mkdir(exist_ok=True)
 
 TFIDF_PATH = MODELS_DIR / "tfidf_content.joblib"
 EVENT_MATRIX_PATH = MODELS_DIR / "event_matrix.joblib"
+CF_MATRIX_PATH = MODELS_DIR / "cf_matrix.joblib"
 
 
 # ----------------------------------------------------------------------
@@ -115,10 +114,80 @@ def build_content_matrix(documents: list[str]):
 
 
 # ----------------------------------------------------------------------
+# Collaborative Filtering (CF) Training
+# ----------------------------------------------------------------------
+def build_collaborative_matrix():
+    """
+    Builds an Item-Item collaborative filtering matrix using user interactions.
+    Because data might be very sparse, we aggregate views and reviews into an implicit rating.
+    """
+    from app.database.connection import SessionLocal
+    from app.models.review import Review
+    from app.models.interaction import UserInteraction
+    import pandas as pd
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.preprocessing import normalize
+    
+    db = SessionLocal()
+    try:
+        # Load interactions and reviews
+        interactions = db.query(UserInteraction).all()
+        reviews = db.query(Review).all()
+        
+        if not interactions and not reviews:
+            logger.warning("No interaction/review data found for Collaborative Filtering.")
+            return None, None
+            
+        # Build a list of dicts: {user_id, event_id, score}
+        data = []
+        # Interactions (implicit: view = 1, click = 1.5, register = 3)
+        for i in interactions:
+            score = 1.0
+            if i.interaction_type == "register": score = 3.0
+            elif i.interaction_type == "favorite": score = 2.0
+            data.append({"user_id": i.user_id, "event_id": i.event_id, "score": score})
+            
+        # Reviews (explicit: rating 1-5)
+        for r in reviews:
+            data.append({"user_id": r.user_id, "event_id": r.event_id, "score": float(r.rating)})
+            
+        df = pd.DataFrame(data)
+        if df.empty:
+            return None, None
+            
+        # Aggregate scores by summing them up if a user interacted multiple times with the same event
+        df = df.groupby(['user_id', 'event_id'])['score'].sum().reset_index()
+        
+        # Create User-Item Matrix
+        # Rows = Events, Columns = Users (Because we want item-item similarity)
+        ui_matrix = df.pivot(index='event_id', columns='user_id', values='score').fillna(0)
+        
+        event_ids_cf = ui_matrix.index.to_numpy()
+        sparse_matrix = ui_matrix.values
+        
+        # If we have enough data (at least a few users and items), we can use SVD to reduce noise
+        if sparse_matrix.shape[1] > 3 and sparse_matrix.shape[0] > 3:
+            logger.info("Applying TruncatedSVD for Collaborative Filtering...")
+            n_components = min(20, sparse_matrix.shape[1] - 1)
+            svd = TruncatedSVD(n_components=n_components, random_state=42)
+            latent_matrix = svd.fit_transform(sparse_matrix)
+            # Normalize to make cosine similarity easier later
+            cf_features = normalize(latent_matrix, axis=1)
+        else:
+            logger.info("Not enough data for SVD. Using raw interaction vectors.")
+            cf_features = normalize(sparse_matrix, axis=1)
+            
+        logger.info(f"CF Item-Item Matrix shape: {cf_features.shape}")
+        return event_ids_cf, cf_features
+        
+    finally:
+        db.close()
+
+# ----------------------------------------------------------------------
 # Save artifacts
 # ----------------------------------------------------------------------
-def save_artifacts(vectorizer, event_ids: list[int], tfidf_matrix) -> None:
-    """Save vectorizer and event matrix to models/ directory."""
+def save_artifacts(vectorizer, event_ids: list[int], tfidf_matrix, event_ids_cf=None, cf_matrix=None) -> None:
+    """Save vectorizer and event matrices to models/ directory."""
     
     # Save vectorizer
     joblib.dump(vectorizer, TFIDF_PATH)
@@ -131,7 +200,16 @@ def save_artifacts(vectorizer, event_ids: list[int], tfidf_matrix) -> None:
     joblib.dump(matrix_data, EVENT_MATRIX_PATH)
     
     logger.info(f"Saved vectorizer → {TFIDF_PATH}")
-    logger.info(f"Saved event matrix → {EVENT_MATRIX_PATH}")
+    # Save CF matrix if available
+    if event_ids_cf is not None and cf_matrix is not None:
+        cf_data = {
+            "event_ids": np.array(event_ids_cf),
+            "cf_matrix": cf_matrix
+        }
+        joblib.dump(cf_data, CF_MATRIX_PATH)
+        logger.info(f"Saved CF matrix → {CF_MATRIX_PATH}")
+    else:
+        logger.info("Skipped saving CF matrix (no data).")
 
 
 # ----------------------------------------------------------------------
@@ -154,18 +232,22 @@ def main() -> None:
         print("\nERROR: No active events found in database.")
         sys.exit(1)
 
-    print("\n[2/3] Training TF-IDF vectorizer...")
+    print("\n[2/4] Training TF-IDF vectorizer (Content-Based)...")
     vectorizer, tfidf_matrix = build_content_matrix(documents)
     
     # Show some top vocabulary terms
     feature_names = vectorizer.get_feature_names_out()
     print(f"  Vocabulary size: {len(feature_names)}")
-    if len(feature_names) > 0:
-        sample_terms = np.random.choice(feature_names, min(5, len(feature_names)), replace=False)
-        print(f"  Sample terms: {', '.join(sample_terms)}")
 
-    print("\n[3/3] Saving model artifacts...")
-    save_artifacts(vectorizer, event_ids, tfidf_matrix)
+    print("\n[3/4] Training Collaborative Filtering (Item-Item)...")
+    event_ids_cf, cf_matrix = build_collaborative_matrix()
+    if event_ids_cf is not None:
+        print(f"  CF matrix built for {len(event_ids_cf)} events.")
+    else:
+        print("  CF matrix skipped due to insufficient data.")
+
+    print("\n[4/4] Saving model artifacts...")
+    save_artifacts(vectorizer, event_ids, tfidf_matrix, event_ids_cf, cf_matrix)
 
     print(f"\n{'=' * 60}")
     print("Training complete!")
