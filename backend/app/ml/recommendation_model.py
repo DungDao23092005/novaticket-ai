@@ -7,6 +7,7 @@ Provides methods to compute similarities and recommend events.
 Artifact paths (relative to backend/):
     models/tfidf_content.joblib
     models/event_matrix.joblib
+    models/cf_matrix.joblib
 
 Usage:
     from app.ml.recommendation_model import recommender
@@ -30,6 +31,7 @@ _BACKEND_DIR = Path(__file__).parent.parent.parent
 _MODELS_DIR = _BACKEND_DIR / "models"
 _TFIDF_PATH = _MODELS_DIR / "tfidf_content.joblib"
 _MATRIX_PATH = _MODELS_DIR / "event_matrix.joblib"
+_CF_MATRIX_PATH = _MODELS_DIR / "cf_matrix.joblib"
 
 
 class RecommendationModel:
@@ -41,8 +43,12 @@ class RecommendationModel:
 
     def __init__(self) -> None:
         self._vectorizer = None
-        self._event_ids = None      # 1D numpy array of event IDs
-        self._tfidf_matrix = None   # Sparse matrix
+        self._event_ids = None      # 1D numpy array of event IDs (CBF)
+        self._tfidf_matrix = None   # Sparse matrix (CBF)
+        
+        self._event_ids_cf = None   # 1D numpy array of event IDs (CF)
+        self._cf_matrix = None      # CF features matrix
+        
         self._loaded = False
         self._load()
 
@@ -63,9 +69,17 @@ class RecommendationModel:
             
             self._event_ids = matrix_data["event_ids"]
             self._tfidf_matrix = matrix_data["tfidf_matrix"]
+            
+            # Load CF matrix if exists
+            if _CF_MATRIX_PATH.exists():
+                cf_data = joblib.load(_CF_MATRIX_PATH)
+                self._event_ids_cf = cf_data["event_ids"]
+                self._cf_matrix = cf_data["cf_matrix"]
+                logger.info(f"CF matrix loaded ({len(self._event_ids_cf)} events).")
+                
             self._loaded = True
             
-            logger.info(f"Recommender model loaded successfully ({len(self._event_ids)} events).")
+            logger.info(f"CBF Recommender loaded successfully ({len(self._event_ids)} events).")
 
         except Exception as exc:
             logger.error("Failed to load recommender model: %s", exc)
@@ -154,11 +168,38 @@ class RecommendationModel:
         user_profile = self._tfidf_matrix[indices].mean(axis=0)
         user_profile = np.asarray(user_profile) # Convert np.matrix to np.array to fix sklearn TypeError
         
-        # Compute similarities
-        sim_scores = cosine_similarity(user_profile, self._tfidf_matrix).flatten()
+        # 1. Content-Based Scores
+        cbf_scores = cosine_similarity(user_profile, self._tfidf_matrix).flatten()
+        
+        # 2. Collaborative Filtering Scores (if available)
+        cf_scores = np.zeros_like(cbf_scores)
+        if self._cf_matrix is not None:
+            # Build user profile for CF
+            cf_indices = []
+            for eid in past_event_ids:
+                idx_match = np.where(self._event_ids_cf == eid)[0]
+                if len(idx_match) > 0:
+                    cf_indices.append(idx_match[0])
+            
+            if cf_indices:
+                user_cf_profile = self._cf_matrix[cf_indices].mean(axis=0).reshape(1, -1)
+                cf_sim = cosine_similarity(user_cf_profile, self._cf_matrix).flatten()
+                
+                # Map CF scores back to the main event IDs index space
+                for idx_cf, cf_eid in enumerate(self._event_ids_cf):
+                    idx_cbf_match = np.where(self._event_ids == cf_eid)[0]
+                    if len(idx_cbf_match) > 0:
+                        cf_scores[idx_cbf_match[0]] = cf_sim[idx_cf]
+                        
+        # 3. Hybrid scoring (Blend CBF and CF)
+        # 70% Content-based, 30% CF (since CF data might be sparse initially)
+        weight_cbf = 0.7 if self._cf_matrix is not None else 1.0
+        weight_cf = 0.3 if self._cf_matrix is not None else 0.0
+        
+        hybrid_scores = (cbf_scores * weight_cbf) + (cf_scores * weight_cf)
         
         # Sort indices
-        sorted_indices = sim_scores.argsort()[::-1]
+        sorted_indices = hybrid_scores.argsort()[::-1]
         
         results = []
         for i in sorted_indices:
@@ -166,7 +207,7 @@ class RecommendationModel:
             if self._event_ids[i] in past_event_ids:
                 continue
                 
-            score = float(sim_scores[i])
+            score = float(hybrid_scores[i])
             if score > 0.0:
                 results.append((int(self._event_ids[i]), round(score, 4)))
                 
