@@ -37,7 +37,7 @@ export default function EventDetailPage() {
             
             // Check if already registered
             // For MVP, we just fetch user interactions and check locally
-            const interactionsResp = await apiClient.get('/interactions');
+            const interactionsResp = await apiClient.get('/interactions/me');
             const hasRegistered = interactionsResp.data.some(
               i => i.event_id === parseInt(id) && i.interaction_type === 'register'
             );

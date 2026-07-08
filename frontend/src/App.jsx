@@ -10,10 +10,10 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import EventDetailPage from './pages/EventDetailPage';
+import DashboardPage from './pages/DashboardPage';
+import RecommendationsPage from './pages/RecommendationsPage';
 
 // Placeholder Pages (will be implemented in later Parts)
-const DashboardPage = () => <div><h1>Dashboard</h1></div>;
-const RecommendationsPage = () => <div><h1>For You ✨</h1></div>;
 const NotFoundPage = () => <div><h1>404 - Not Found</h1></div>;
 
 function App() {

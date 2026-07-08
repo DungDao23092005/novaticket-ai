@@ -30,13 +30,9 @@ export const useAuthStore = create((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      // FastAPI OAuth2PasswordRequestForm expects x-www-form-urlencoded
-      const formData = new URLSearchParams();
-      formData.append('username', email); // OAuth2 expects 'username'
-      formData.append('password', password);
-
-      const response = await apiClient.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      const response = await apiClient.post('/auth/login', {
+        email,
+        password
       });
       
       const { access_token } = response.data;
@@ -64,15 +60,21 @@ export const useAuthStore = create((set, get) => ({
         email,
         username,
         password,
-        full_name: fullName,
+        full_name: fullName || null,
       });
       set({ isLoading: false });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.detail || 'Registration failed', 
-        isLoading: false 
-      });
+      let errorMsg = 'Registration failed';
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          // FastAPI 422 Validation Error
+          errorMsg = error.response.data.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`).join(', ');
+        } else {
+          errorMsg = error.response.data.detail;
+        }
+      }
+      set({ error: errorMsg, isLoading: false });
       return false;
     }
   },
