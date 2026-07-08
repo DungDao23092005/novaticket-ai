@@ -5,10 +5,12 @@ import { useAuthStore } from './store/authStore';
 // Layout
 import MainLayout from './layouts/MainLayout';
 
+// Pages
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+
 // Placeholder Pages (will be implemented in later Parts)
 const HomePage = () => <div><h1>Event List</h1><p>List of all events will go here.</p></div>;
-const LoginPage = () => <div><h1>Login</h1></div>;
-const RegisterPage = () => <div><h1>Register</h1></div>;
 const EventDetailPage = () => <div><h1>Event Detail</h1></div>;
 const DashboardPage = () => <div><h1>Dashboard</h1></div>;
 const RecommendationsPage = () => <div><h1>For You ✨</h1></div>;
