@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import EventCard from '../components/EventCard';
+import ReviewList from '../components/ReviewList';
 import { Calendar, MapPin, Users, DollarSign, Tag, ArrowLeft, CheckCircle } from 'lucide-react';
 
 export default function EventDetailPage() {
@@ -146,6 +147,9 @@ export default function EventDetailPage() {
           </div>
         </div>
       </div>
+      
+      {/* Reviews Section */}
+      <ReviewList eventId={id} />
       
       {/* Similar Events Section */}
       {similarEvents.length > 0 && (

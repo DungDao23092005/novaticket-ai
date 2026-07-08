@@ -544,3 +544,42 @@ a:hover {
   color: var(--danger);
   border-radius: 8px;
 }
+
+/* --- Reviews & Sentiment Badges --- */
+.star-filled {
+  color: #fbbf24; /* yellow-400 */
+  fill: #fbbf24;
+}
+
+.star-empty {
+  color: var(--border-color);
+}
+
+.sentiment-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sentiment-positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.sentiment-negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sentiment-neutral {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
