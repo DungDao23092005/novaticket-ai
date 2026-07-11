@@ -1,0 +1,7 @@
+run nodejs frontend
+node .\node_modules\vite\bin\vite.js
+
+run backend
+venv
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+http://localhost:8000/docs
