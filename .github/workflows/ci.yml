@@ -58,6 +58,9 @@ jobs:
         docker exec ${{ job.services.sqlserver.id }} /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'NovaTicket@2024!' -Q "CREATE DATABASE novaticket_test" -No
         
     - name: Run Pytest
+      env:
+        SECRET_KEY: "test-secret-key-for-ci-pipeline"
+        MSSQL_PASSWORD: "NovaTicket@2024!"
       run: |
         cd backend
         pytest -v
