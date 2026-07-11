@@ -44,7 +44,6 @@ Built as a learning project demonstrating modern ML-backed web development pract
 | **Pydantic v2** | Data validation & serialization |
 | **python-jose** | JWT token handling |
 | **bcrypt** | Password hashing |
-| **Alembic** | Database migrations |
 | **pytest** | Testing framework |
 
 ### Frontend
@@ -160,8 +159,8 @@ docker run -d --name sqlserver \
   -p 1433:1433 \
   mcr.microsoft.com/mssql/server:2022-latest
 
-# Run migrations
-alembic upgrade head
+# Create database tables
+python -c "from app.database.base import Base; from app.database.connection import engine; import app.models.user, app.models.event, app.models.category, app.models.interaction, app.models.review; Base.metadata.create_all(engine)"
 
 # Seed demo data (optional)
 python data/seed.py
@@ -231,6 +230,7 @@ All protected endpoints require `Authorization: Bearer <token>` header.
 | `GET` | `/auth/me` | Get current user profile | ✅ |
 | `GET` | `/events` | List events (paginated, filterable) | ❌ |
 | `GET` | `/events/{id}` | Get event detail | ❌ |
+| `POST` | `/events/batch` | Get multiple events by IDs | ❌ |
 | `POST` | `/interactions` | Record user interaction | ✅ |
 | `GET` | `/interactions/me` | Get user's interactions | ✅ |
 | `POST` | `/reviews` | Submit review (auto sentiment) | ✅ |
@@ -292,7 +292,7 @@ tests/test_reviews.py::test_create_review PASSED
 | `docker-compose down -v` | Stop and remove containers + volumes |
 | `docker-compose logs -f backend` | Follow backend logs |
 | `docker-compose exec backend python -m pytest tests/ -v` | Run tests in container |
-| `docker-compose exec backend alembic upgrade head` | Run migrations |
+| `docker-compose exec backend python -c "from app.database.base import Base; from app.database.connection import engine; import app.models.user, app.models.event, app.models.category, app.models.interaction, app.models.review; Base.metadata.create_all(engine)"` | Create database tables |
 | `docker-compose exec backend python training/train_sentiment.py` | Train sentiment model |
 | `docker-compose exec backend python training/train_recommender.py` | Train recommender model |
 
