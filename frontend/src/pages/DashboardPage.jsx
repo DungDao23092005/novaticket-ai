@@ -21,22 +21,17 @@ export default function DashboardPage() {
         const userInteractions = intResp.data || [];
         setInteractions(userInteractions);
         
-        // 2. Fetch event details for these interactions
-        // Extract unique event IDs
+        // 2. Fetch event details for these interactions using batch endpoint
         const uniqueEventIds = [...new Set(userInteractions.map(i => i.event_id))];
         
-        // In a real app we'd have a batch endpoint, but for MVP we do concurrent gets
-        const eventPromises = uniqueEventIds.map(id => apiClient.get(`/events/${id}`).catch(() => null));
-        const eventResponses = await Promise.all(eventPromises);
-        
-        const eMap = {};
-        eventResponses.forEach(resp => {
-          if (resp && resp.data) {
-            eMap[resp.data.id] = resp.data;
-          }
-        });
-        
-        setEventsMap(eMap);
+        if (uniqueEventIds.length > 0) {
+          const batchResp = await apiClient.post('/events/batch', uniqueEventIds);
+          const eMap = {};
+          (batchResp.data || []).forEach(event => {
+            eMap[event.id] = event;
+          });
+          setEventsMap(eMap);
+        }
       } catch (err) {
         console.error('Failed to load dashboard data', err);
       } finally {

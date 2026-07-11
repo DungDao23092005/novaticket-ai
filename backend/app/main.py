@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     - Shutdown: runs after the app stops accepting requests
 
     Currently: verifies DB connection on startup.
-    Will be expanded in Sprint 5 (ML model loading).
+    ML models (Sentiment + Recommender) are loaded lazily at import time.
     """
     # --- STARTUP ---
     print(f"[NovaTicket] Starting {settings.app_name} v{settings.app_version}")
@@ -90,11 +90,11 @@ app.add_middleware(
 # Routers
 # Added incrementally as each sprint builds the feature
 # ----------------------------------------------------------------------
-from app.routers import auth          # Sprint 2
-from app.routers import categories    # Sprint 3 - P1
-from app.routers import events        # Sprint 3 - P3
-from app.routers import interactions  # Sprint 4 - P1
-from app.routers import reviews       # Sprint 4 - P3
+from app.routers import auth
+from app.routers import categories
+from app.routers import events
+from app.routers import interactions
+from app.routers import reviews
 
 app.include_router(auth.router)
 app.include_router(categories.router)
@@ -102,7 +102,6 @@ app.include_router(events.router)
 app.include_router(interactions.router)
 app.include_router(reviews.router)
 
-# Sprint 6:
 from app.routers import recommendations
 app.include_router(recommendations.router)
 

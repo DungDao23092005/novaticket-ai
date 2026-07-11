@@ -72,7 +72,7 @@ Built as a learning project demonstrating modern ML-backed web development pract
 NovaTicket/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # FastAPI routes (auth, events, reviews, recommendations...)
+│   │   ├── routers/          # FastAPI routes (auth, events, reviews, recommendations...)
 │   │   ├── core/             # Config, security, dependencies
 │   │   ├── database/         # DB connection, base models
 │   │   ├── ml/               # Inference services (sentiment_model, recommendation_model)

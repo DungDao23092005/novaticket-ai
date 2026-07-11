@@ -43,7 +43,7 @@ export default function EventCard({ event }) {
         
         <div className="event-card-footer">
           <div className="event-price">
-            {event.price === 0 ? 'Free' : `$${event.price}`}
+            {event.price === 0 ? 'Free' : `${Number(event.price).toLocaleString()}₫`}
           </div>
           <div className="view-details">View Details →</div>
         </div>

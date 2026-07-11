@@ -104,7 +104,7 @@ export default function EventDetailPage() {
         <div className="event-detail-meta">
           <div className="meta-item"><Calendar size={18} /> {startDate}</div>
           <div className="meta-item"><MapPin size={18} /> {event.venue}, {event.city || 'Online'}</div>
-          <div className="meta-item"><DollarSign size={18} /> {event.price === 0 ? 'Free' : event.price}</div>
+          <div className="meta-item"><DollarSign size={18} /> {event.price === 0 ? 'Free' : `${Number(event.price).toLocaleString()}₫`}</div>
           {event.capacity && <div className="meta-item"><Users size={18} /> Capacity: {event.capacity}</div>}
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function EventDetailPage() {
         <div className="event-sidebar">
           <div className="registration-card">
             <h3>Tickets</h3>
-            <div className="price-tag">{event.price === 0 ? 'Free' : `$${event.price}`}</div>
+            <div className="price-tag">{event.price === 0 ? 'Free' : `${Number(event.price).toLocaleString()}₫`}</div>
             
             {registered ? (
               <div className="registered-success">
