@@ -65,13 +65,13 @@ def load_and_prepare_events() -> tuple[list[int], list[str]]:
     
     try:
         # Load active events, join with category for richer text features
-        events = db.query(Event, Category).join(Category, Event.category_id == Category.id).filter(Event.is_active == True).all()
+        events = db.query(Event, Category).outerjoin(Category, Event.category_id == Category.id).filter(Event.is_active == True).all()
         
         for event, category in events:
             # Construct a rich text document for content-based filtering
             # We weight title and category higher by repeating them
             title = event.title or ""
-            cat_name = category.name or ""
+            cat_name = category.name if category else ""
             tags = (event.tags or "").replace(",", " ")
             desc = event.description or ""
             
@@ -123,7 +123,7 @@ def build_collaborative_matrix():
     """
     from app.database.connection import SessionLocal
     from app.models.review import Review
-    from app.models.interaction import UserInteraction
+    from app.models.interaction import UserInteraction, INTERACTION_SCORES
     import pandas as pd
     from sklearn.decomposition import TruncatedSVD
     from sklearn.preprocessing import normalize
@@ -140,11 +140,9 @@ def build_collaborative_matrix():
             
         # Build a list of dicts: {user_id, event_id, score}
         data = []
-        # Interactions (implicit: view = 1, click = 1.5, register = 3)
+        # Interactions — use canonical INTERACTION_SCORES from models
         for i in interactions:
-            score = 1.0
-            if i.interaction_type == "register": score = 3.0
-            elif i.interaction_type == "favorite": score = 2.0
+            score = INTERACTION_SCORES.get(i.interaction_type, 1.0)
             data.append({"user_id": i.user_id, "event_id": i.event_id, "score": score})
             
         # Reviews (explicit: rating 1-5)

@@ -14,7 +14,7 @@ export const useAuthStore = create((set, get) => ({
     
     set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get('/users/me');
+      const response = await apiClient.get('/auth/me');
       set({ user: response.data, isAuthenticated: true, isLoading: false });
     } catch (error) {
       // If 401, clear token

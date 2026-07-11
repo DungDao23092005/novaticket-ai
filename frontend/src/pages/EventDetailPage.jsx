@@ -98,7 +98,7 @@ export default function EventDetailPage() {
       </Link>
       
       <div className="event-detail-header">
-        <div className="category-badge large">{event.category_id}</div>
+        <div className="category-badge large">{event.category?.name || 'Uncategorized'}</div>
         <h1 className="event-detail-title">{event.title}</h1>
         
         <div className="event-detail-meta">

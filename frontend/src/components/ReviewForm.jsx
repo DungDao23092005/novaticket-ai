@@ -11,7 +11,12 @@ export default function ReviewForm({ eventId, onReviewSubmitted }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!reviewText.trim()) return;
-    
+
+    if (reviewText.trim().length < 10) {
+      setError('Review must be at least 10 characters long.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     
@@ -19,7 +24,7 @@ export default function ReviewForm({ eventId, onReviewSubmitted }) {
       const response = await apiClient.post('/reviews/', {
         event_id: parseInt(eventId),
         rating: rating,
-        review_text: reviewText
+        content: reviewText
       });
       
       setReviewText('');

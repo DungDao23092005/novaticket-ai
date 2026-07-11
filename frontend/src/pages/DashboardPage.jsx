@@ -88,7 +88,7 @@ export default function DashboardPage() {
                       <div>
                         <h4 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>{event.title}</h4>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                          Registered on: {new Date(interaction.timestamp).toLocaleDateString()}
+                          Registered on: {new Date(interaction.created_at).toLocaleDateString()}
                         </div>
                       </div>
                       <Link to={`/events/${event.id}`} className="btn btn-outline">View Event</Link>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                         </Link>
                       </div>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {new Date(interaction.timestamp).toLocaleDateString()}
+                        {new Date(interaction.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   );

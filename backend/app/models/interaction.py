@@ -44,8 +44,8 @@ if TYPE_CHECKING:
 INTERACTION_SCORES: dict[str, float] = {
     "view": 1.0,
     "click": 2.0,
-    "favorite": 2.5,
-    "register": 3.0,
+    "favorite": 3.0,
+    "register": 5.0,
 }
 
 

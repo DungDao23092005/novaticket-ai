@@ -14,7 +14,7 @@ export default function EventCard({ event }) {
     <Link to={`/events/${event.id}`} className="event-card-link">
       <div className="event-card">
         <div className="event-card-header">
-          <span className="category-badge">{event.category_id}</span>
+          <span className="category-badge">{event.category?.name || 'Uncategorized'}</span>
           <h3 className="event-title">{event.title}</h3>
         </div>
         

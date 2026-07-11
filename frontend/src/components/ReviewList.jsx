@@ -11,8 +11,8 @@ export default function ReviewList({ eventId }) {
 
   const fetchReviews = async () => {
     try {
-      const response = await apiClient.get(`/reviews/?event_id=${eventId}`);
-      setReviews(response.data.items || []);
+      const response = await apiClient.get(`/events/${eventId}/reviews`);
+      setReviews(response.data || []);
     } catch (err) {
       console.error('Failed to load reviews', err);
     } finally {
@@ -76,7 +76,7 @@ export default function ReviewList({ eventId }) {
             <div key={review.id} className="review-card" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <div className="review-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div className="review-user-info">
-                  <div style={{ fontWeight: 'bold' }}>User #{review.user_id}</div>
+                  <div style={{ fontWeight: 'bold' }}>{review.user?.username || review.user?.full_name || `User #${review.user_id}`}</div>
                   <div className="stars-display" style={{ display: 'flex', marginTop: '0.25rem' }}>
                     {[1, 2, 3, 4, 5].map(star => (
                       <Star 
@@ -88,11 +88,11 @@ export default function ReviewList({ eventId }) {
                   </div>
                 </div>
                 <div>
-                  {getSentimentBadge(review.predicted_sentiment)}
+                  {getSentimentBadge(review.sentiment_label)}
                 </div>
               </div>
               <p className="review-text" style={{ color: 'var(--text-main)', lineHeight: '1.6' }}>
-                {review.review_text}
+                {review.content}
               </p>
             </div>
           ))
