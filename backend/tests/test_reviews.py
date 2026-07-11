@@ -23,8 +23,9 @@ def test_create_review(client, db_session):
     
     # 3. Submit Review (mock the ML model to avoid needing trained artifacts in test)
     # We patch the SentimentService.predict method
-    with patch("app.ml.sentiment_model.sentiment_model.is_loaded", True), \
+    with patch("app.ml.sentiment_model.sentiment_model.is_loaded") as mock_is_loaded, \
         patch("app.ml.sentiment_model.sentiment_model.predict") as mock_predict:
+        mock_is_loaded.return_value = True
         mock_predict.return_value = ("positive", 0.95)
         
         response = client.post(
