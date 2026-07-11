@@ -1,8 +1,6 @@
 # ==============================================================
 # NovaTicket — Docker Compose
-# Sprint 0: SQL Server only (for local development)
-# Backend and Frontend are run locally, not in Docker yet.
-# Full Docker setup (including backend/frontend) → Sprint 9
+# Full Stack Environment (Sprint 9)
 # ==============================================================
 
 services:
@@ -32,6 +30,39 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: novaticket_backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override the database host to point to the sqlserver container
+      - MSSQL_SERVER=sqlserver
+      # Add frontend Docker port (80) to allowed origins
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80,http://localhost
+    ports:
+      - "8000:8000"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      # Mount models folder so ML artifacts persist outside container
+      - ./backend/models:/app/models
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: novaticket_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:
