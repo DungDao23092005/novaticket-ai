@@ -51,7 +51,7 @@ class ReviewResponse(BaseModel):
     event_id: int
     rating: int
     content: str
-    sentiment_label: str | None      # Set by SentimentService (Sprint 5)
+    sentiment_label: str | None      # Set by SentimentService
     sentiment_confidence: float | None  # Model confidence score
     created_at: datetime
     user: UserPublic | None          # Nested user info (username only, no email)
@@ -60,7 +60,7 @@ class ReviewResponse(BaseModel):
 class SentimentSummary(BaseModel):
     """
     Aggregated sentiment statistics for an event.
-    Returned by GET /events/{id}/sentiment-summary (Sprint 5-P5).
+    Returned by GET /events/{id}/sentiment-summary.
     """
     event_id: int
     total_reviews: int

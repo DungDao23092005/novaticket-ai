@@ -12,14 +12,16 @@ from app.main import app
 from app.database.connection import get_db
 from app.database.base import Base
 
+import os
 import urllib.parse
+
 # URL encode the password because it contains '@' which breaks SQLAlchemy URL parsing
-DB_PASSWORD = urllib.parse.quote_plus("NovaTicket@2024!")
+TEST_DB_PASSWORD = os.getenv("TEST_DB_PASSWORD", "NovaTicket@2024!")
+DB_PASSWORD = urllib.parse.quote_plus(TEST_DB_PASSWORD)
 
 # --- Test Database Configuration ---
 # We use a separate database 'novaticket_test' on the same SQL Server
 # Use 'sqlserver' as hostname when running inside Docker, 'localhost' for local dev
-import os
 TEST_DB_HOST = os.getenv("TEST_DB_HOST", "localhost")
 
 TEST_DATABASE_URL = (

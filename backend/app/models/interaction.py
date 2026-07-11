@@ -7,8 +7,8 @@ Collaborative Filtering recommendation engine.
 Interaction types and their implicit scores:
     view      = 1.0  — user viewed event listing
     click     = 2.0  — user clicked into event detail
-    register  = 3.0  — user registered for the event (strongest signal)
-    favorite  = 2.5  — user saved/favorited the event
+    favorite  = 3.0  — user saved/favorited the event
+    register  = 5.0  — user registered for the event (strongest signal)
 
 Table: user_interactions
 
@@ -98,7 +98,7 @@ class UserInteraction(Base):
         server_default="1.0",
         comment=(
             "Implicit feedback score: view=1.0, click=2.0, "
-            "favorite=2.5, register=3.0"
+            "favorite=3.0, register=5.0"
         ),
     )
     created_at: Mapped[datetime] = mapped_column(

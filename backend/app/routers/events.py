@@ -17,7 +17,7 @@ Query parameters for GET /events:
 Both endpoints are public — no authentication required.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
@@ -25,6 +25,26 @@ from app.repositories.event_repository import EventRepository
 from app.schemas.event import EventListResponse, EventResponse
 
 router = APIRouter(prefix="/events", tags=["Events"])
+
+
+# ----------------------------------------------------------------------
+# POST /events/batch — get multiple events by IDs
+# ----------------------------------------------------------------------
+@router.post(
+    "/batch",
+    response_model=list[EventResponse],
+    summary="Get multiple events by IDs",
+)
+def get_events_batch(
+    ids: list[int] = Body(..., description="Array of event IDs to fetch"),
+    db: Session = Depends(get_db),
+) -> list[EventResponse]:
+    """
+    Returns a list of active events matching the given IDs.
+    IDs not found or inactive are omitted from the result.
+    """
+    repo = EventRepository(db)
+    return repo.get_by_ids(ids)
 
 
 # ----------------------------------------------------------------------

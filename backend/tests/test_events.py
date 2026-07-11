@@ -4,9 +4,32 @@ test_events.py — Tests for the Events and Categories endpoints.
 import pytest
 
 def test_create_category(client):
-    # Categories might be pre-seeded, but let's try creating one (if we had a POST /categories endpoint)
-    # Since we only have GET /categories for public users in the current scope, let's just test GET
-    pass
+    # Register user and get token
+    client.post("/auth/register", json={"email": "admin@example.com", "username": "admin", "password": "StrongPass123!"})
+    token = client.post("/auth/login", json={"email": "admin@example.com", "password": "StrongPass123!"}).json()["access_token"]
+
+    # Create category
+    response = client.post(
+        "/categories",
+        json={"name": "New Category", "description": "A test category"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "New Category"
+    assert data["description"] == "A test category"
+
+    # Duplicate name should return 409
+    response = client.post(
+        "/categories",
+        json={"name": "New Category"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 409
+
+    # Unauthenticated should return 401
+    response = client.post("/categories", json={"name": "No Auth Category"})
+    assert response.status_code == 401
 
 def test_get_categories(client, db_session):
     # Insert a dummy category directly into DB

@@ -84,7 +84,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False, comment='FK to users — delete interactions when user is deleted'),
     sa.Column('event_id', sa.Integer(), nullable=False, comment='FK to events — delete interactions when event is deleted'),
     sa.Column('interaction_type', sa.String(length=50), nullable=False, comment='Type of interaction: view | click | favorite | register'),
-    sa.Column('interaction_score', sa.Float(), server_default='1.0', nullable=False, comment='Implicit feedback score: view=1.0, click=2.0, favorite=2.5, register=3.0'),
+    sa.Column('interaction_score', sa.Float(), server_default='1.0', nullable=False, comment='Implicit feedback score: view=1.0, click=2.0, favorite=3.0, register=5.0'),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('getdate()'), nullable=False, comment='When the interaction occurred'),
     sa.CheckConstraint("interaction_type IN ('view', 'click', 'favorite', 'register')", name='ck_interaction_type'),
     sa.ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE'),

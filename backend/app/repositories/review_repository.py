@@ -3,7 +3,7 @@ repositories/review_repository.py — Database access layer for Review.
 
 Key design decisions:
     - 1 review per user per event (enforced by UNIQUE constraint in DB)
-    - sentiment_label and sentiment_confidence updated by SentimentService (Sprint 5)
+    - sentiment_label and sentiment_confidence updated by SentimentService
     - Eagerly loads User (for ReviewResponse.user field)
     - Provides sentiment aggregation query for GET /events/{id}/sentiment-summary
 """
@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, case
 
 from app.models.review import Review
-from app.models.user import User
 
 
 class ReviewRepository:
@@ -61,7 +60,7 @@ class ReviewRepository:
     def get_sentiment_summary(self, event_id: int) -> dict:
         """
         Aggregate sentiment counts and average rating for an event.
-        Used by GET /events/{id}/sentiment-summary (Sprint 5-P5).
+        Used by GET /events/{id}/sentiment-summary.
 
         Returns a dict with keys:
             total, positive, neutral, negative, avg_rating
@@ -117,8 +116,8 @@ class ReviewRepository:
         """
         Create a new review.
 
-        sentiment_label and sentiment_confidence are optional at creation time.
-        Sprint 5 will populate them via SentimentService before calling create().
+    sentiment_label and sentiment_confidence are optional at creation time.
+    They are populated by SentimentService before calling create().
 
         Returns:
             The created Review ORM instance with user relationship loaded.
@@ -152,7 +151,7 @@ class ReviewRepository:
     ) -> Review | None:
         """
         Update sentiment fields after ML prediction.
-        Called by SentimentService in Sprint 5.
+        Called by SentimentService after ML prediction.
         """
         review = self.db.query(Review).filter(Review.id == review_id).first()
         if not review:

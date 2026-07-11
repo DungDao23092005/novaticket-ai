@@ -26,6 +26,20 @@ class EventRepository:
     # Read
     # ------------------------------------------------------------------
 
+    def get_by_ids(self, event_ids: list[int]) -> list[Event]:
+        """
+        Fetch multiple events by IDs with category eagerly loaded.
+        Returns list in the order of IDs requested.
+        """
+        events = (
+            self.db.query(Event)
+            .options(joinedload(Event.category))
+            .filter(Event.id.in_(event_ids), Event.is_active == True)
+            .all()
+        )
+        events_dict = {e.id: e for e in events}
+        return [events_dict[eid] for eid in event_ids if eid in events_dict]
+
     def get_by_id(self, event_id: int) -> Event | None:
         """
         Fetch a single event by ID with category eagerly loaded.

@@ -7,7 +7,7 @@ Interaction types (aligned with ORM CHECK constraint):
     register  — User registered / bought ticket for event
     favorite  — User favorited / bookmarked the event
 
-Scores used by Recommendation Engine:
+Scores used by the Recommendation Engine:
     view      → 1.0
     click     → 2.0
     favorite  → 3.0
