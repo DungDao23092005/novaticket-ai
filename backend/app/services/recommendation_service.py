@@ -76,9 +76,9 @@ class RecommendationService:
             exclude_ids = set(past_event_ids) | {e.id for e in recommended_events}
             
             # Fetch newest active events
-            newest_events = self.event_repo.get_all(limit=top_k * 2) # Fetch extra to account for exclusions
+            newest_events, _, _ = self.event_repo.get_list(page_size=top_k * 2) # Fetch extra to account for exclusions
             
-            for event in newest_events.items:
+            for event in newest_events:
                 if event.id not in exclude_ids:
                     recommended_events.append(event)
                 if len(recommended_events) >= top_k:
