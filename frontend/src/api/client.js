@@ -2,8 +2,11 @@ import axios from 'axios';
 import { getToken } from '../utils/tokenHelper';
 
 // Create an Axios instance with base URL
+// Use relative URL for Docker compatibility, or env variable for flexibility
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:8000', // Our FastAPI backend
+  baseURL: API_BASE_URL, // Empty string = relative to current origin (works in Docker)
   headers: {
     'Content-Type': 'application/json',
   },

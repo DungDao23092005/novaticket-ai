@@ -17,9 +17,13 @@ import urllib.parse
 DB_PASSWORD = urllib.parse.quote_plus("NovaTicket@2024!")
 
 # --- Test Database Configuration ---
-# We use a separate database 'novaticket_test' on the same local SQL Server
+# We use a separate database 'novaticket_test' on the same SQL Server
+# Use 'sqlserver' as hostname when running inside Docker, 'localhost' for local dev
+import os
+TEST_DB_HOST = os.getenv("TEST_DB_HOST", "localhost")
+
 TEST_DATABASE_URL = (
-    f"mssql+pyodbc://sa:{DB_PASSWORD}@localhost:1433/novaticket_test"
+    f"mssql+pyodbc://sa:{DB_PASSWORD}@{TEST_DB_HOST}:1433/novaticket_test"
     "?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes"
 )
 

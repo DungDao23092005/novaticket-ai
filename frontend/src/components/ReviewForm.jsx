@@ -21,7 +21,7 @@ export default function ReviewForm({ eventId, onReviewSubmitted }) {
     setError(null);
     
     try {
-      const response = await apiClient.post('/reviews/', {
+      const response = await apiClient.post('/reviews', {
         event_id: parseInt(eventId),
         rating: rating,
         content: reviewText

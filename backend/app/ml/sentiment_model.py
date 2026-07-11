@@ -24,6 +24,7 @@ Usage:
 """
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -32,6 +33,10 @@ logger = logging.getLogger(__name__)
 # Paths relative to backend/ directory
 _BACKEND_DIR = Path(__file__).parent.parent.parent
 _MODELS_DIR = _BACKEND_DIR / "models"
+
+# Ensure backend/ is in sys.path so 'training' package can be imported
+if str(_BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_DIR))
 _MODEL_PATH = _MODELS_DIR / "sentiment_model.joblib"
 _TFIDF_PATH = _MODELS_DIR / "tfidf_sentiment.joblib"
 

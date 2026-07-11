@@ -42,6 +42,8 @@ services:
     environment:
       # Override the database host to point to the sqlserver container
       - MSSQL_SERVER=sqlserver
+      # Test database host for pytest
+      - TEST_DB_HOST=sqlserver
       # Add frontend Docker port (80) to allowed origins
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80,http://localhost
     ports:

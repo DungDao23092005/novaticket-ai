@@ -17,14 +17,17 @@ import RecommendationsPage from './pages/RecommendationsPage';
 const NotFoundPage = () => <div><h1>404 - Not Found</h1></div>;
 
 function App() {
-  const { fetchUser, isAuthenticated } = useAuthStore();
+  const { initialize, isInitialized } = useAuthStore();
 
-  // Try to load user profile if token exists on app mount
+  // Initialize auth state on app mount
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchUser();
-    }
-  }, [isAuthenticated, fetchUser]);
+    initialize();
+  }, [initialize]);
+
+  // Show loading while initializing
+  if (!isInitialized) {
+    return <div className="loading-spinner">Loading...</div>;
+  }
 
   return (
     <Routes>
